@@ -93,27 +93,20 @@ class CharacterController extends Controller
     public function getCharacterAudioByAnime($animeId): JsonResponse
     {
         // Проверяем, существует ли аниме
-        $anime = Anime::with('characters')->find($animeId);
+        $anime = Anime::find($animeId);
 
         if (!$anime) {
             return response()->json(['message' => 'Аниме не найдено.'], 404);
         }
 
-        // Формируем список персонажей с их аудио-дорожками и другими параметрами
-        $charactersWithAudio = $anime->characters->filter(function ($character) use ($animeId) {
-            // Проверяем, что anime_id персонажа соответствует переданному animeId
-            return $character->anime->contains('id', $animeId);
-        })->map(function ($character) {
-            // Получаем все аниме, в которых этот персонаж участвует
-            $animeTitles = $character->anime->pluck('title')->implode(', ');
-
+        // Получаем всех персонажей, связанных с этим аниме
+        $charactersWithAudio = $anime->characters->map(function ($character) {
             return [
                 'id'            => $character->id,
                 'name'          => $character->name,
-                'description'   => $character->description, // Описание персонажа
-                'voice_actor'   => $character->voice_actor, // Голосовой актер
-                'audio_url'     => $character->audio_path ? Storage::url($character->audio_path) : null, // Аудио-дорожка
-                'anime_titles'  => $animeTitles, // Названия аниме, в которых этот персонаж участвует
+                'description'   => $character->description,
+                'voice_actor'   => $character->voice_actor,
+                'audio_url'     => $character->audio_path ? Storage::url($character->audio_path) : null,
             ];
         });
 

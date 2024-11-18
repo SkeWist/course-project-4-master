@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 use App\Models\Genre;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class GenreController extends Controller
 {
-    public function index() // Получение всех жанров
+    public function index(): JsonResponse
     {
-        $genres = Genre::all();
+        // Получаем все жанры с только нужными полями
+        $genres = Genre::select('id', 'name')->get();
+
+        // Возвращаем результат в формате JSON
         return response()->json($genres, 200);
     }
 

@@ -8,6 +8,16 @@ use Illuminate\Http\Request;
 
 class AnimeController extends Controller
 {
+    public function rules()
+    {
+        return [
+            'genre' => 'nullable|string|exists:genres,name',
+            'age_rating' => 'nullable|string|exists:age_ratings,name', // Проверка существования
+            'sort_by' => 'nullable|string|in:title,release_date,rating',
+            'sort_order' => 'nullable|string|in:asc,desc',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ];
+    }
     public function index(AnimeListRequest $request)
     {
         $query = Anime::with(['genres', 'studio', 'ageRating']); // Загрузка связанных данных
@@ -84,7 +94,8 @@ class AnimeController extends Controller
 
     public function random()
     {
-        $anime = Anime::inRandomOrder()->first();
+        // Попробуйте изменить запрос
+        $anime = Anime::inRandomOrder()->limit(1)->first();
 
         if (!$anime) {
             return response()->json(['message' => 'Аниме не найдено.'], 404);

@@ -11,7 +11,7 @@ class AgeRating extends Model
 
     protected $fillable = ['name'];
 
-    public function animes()
+    public function anime()
     {
         return $this->hasMany(Anime::class);
     }

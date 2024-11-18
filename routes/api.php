@@ -7,6 +7,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnimeController;
 use App\Http\Controllers\StudioController;
 use App\Http\Controllers\CharacterController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\AgeRatingController;
+use App\Http\Controllers\AnimeTypeController;
 
 // Аутентификация
 Route::post('/login', [AuthController::class, 'login']);
@@ -18,17 +21,18 @@ Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'getUser
 Route::middleware('auth:sanctum')->post('/user/profile', [UserController::class, 'updateProfile']);
 
 // Аниме
-Route::get('/anime', [AnimeController::class, 'index']); // Получение списка аниме
+Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index'); // Получение списка аниме
 Route::get('/anime/{animeId}', [AnimeController::class, 'show'])->name('anime.show'); // Просмотр конкретного аниме
 Route::get('/anime/random', [AnimeController::class, 'random']); // Случайное аниме
 Route::get('/anime/year/{year}', [AnimeController::class, 'getAnimeByYear']); // Поиск аниме по году
 Route::get('/anime/search', [AnimeController::class, 'searchAnime']); // Поиск аниме по ключевым словам
-Route::get('/anime-types', [AnimeController::class, 'getAnimeTypes']); // Типы аниме
+Route::get('/anime_types', [AnimeTypeController::class, 'index']); // Типы аниме
+Route::get('/anime/random', [AnimeController::class, 'random']);
 
 // Дополнительные ресурсы
-Route::get('/genres', [AnimeController::class, 'getGenres']); // Получение списка жанров
-Route::get('/studios', [AnimeController::class, 'getStudios']); // Получение списка студий
-Route::get('/age_ratings', [AnimeController::class, 'getAgeRatings']); // Возрастные рейтинги
+Route::get('/genres', [GenreController::class, 'index']); // Получение списка жанров
+Route::get('/studios', [StudioController::class, 'index']); // Получение списка студий
+Route::get('/age_ratings', [AgeRatingController::class, 'index']); // Возрастные рейтинги
 
 // Администрирование (требуется аутентификация)
 Route::prefix('admin')->middleware('auth:sanctum')->group(function () {

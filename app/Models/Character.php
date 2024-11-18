@@ -19,6 +19,6 @@ class Character extends Model
     // Отношение персонажа к аниме через промежуточную таблицу anime_character
     public function anime()
     {
-        return $this->belongsToMany(Anime::class, 'anime_character');
+        return $this->belongsTo(Anime::class, 'anime_id');
     }
 }

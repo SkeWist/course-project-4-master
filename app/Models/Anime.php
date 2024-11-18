@@ -23,7 +23,7 @@ class Anime extends Model
 
     public function genres()
     {
-        return $this->belongsToMany(Genre::class);
+        return $this->belongsToMany(Genre::class, 'anime_genre', 'anime_id', 'genre_id');
     }
 
     public function studio()
@@ -37,6 +37,6 @@ class Anime extends Model
     }
     public function characters()
     {
-        return $this->belongsToMany(Character::class, 'anime_character');
+        return $this->hasMany(Character::class, 'anime_id');
     }
 }

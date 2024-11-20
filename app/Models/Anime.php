@@ -66,8 +66,5 @@ class Anime extends Model
     /**
      * Получение случайного аниме.
      */
-    public static function randomAnime()
-    {
-        return self::inRandomOrder()->first();
-    }
+
 }

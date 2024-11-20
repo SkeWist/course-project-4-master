@@ -100,14 +100,7 @@ class AnimeController extends Controller
         return response()->json(['message' => 'Аниме успешно удалено.'], 200);
     }
 
-    public function random()
-    {
-        // Получаем случайное аниме с помощью метода randomAnime
-        $anime = Anime::randomAnime();
 
-
-        return response()->json($anime);
-    }
     public function searchAnime(Request $request)
     {
         $keyword = $request->query('keyword');
@@ -202,4 +195,32 @@ class AnimeController extends Controller
         ], 200);
     }
 
+    public function getRandomAnime()
+    {
+        if (Anime::count() == 0) {
+            return response()->json(['message' => 'Не найдено аниме в базе данных.'], 404);
+        }
+
+        // Получаем случайное аниме из базы данных
+        $anime = Anime::inRandomOrder()->first();
+
+        // Формируем ответ с данными о случайном аниме
+        $animeData = [
+            'id' => $anime->id,
+            'title' => $anime->title,
+            'description' => $anime->description,
+            'studio' => $anime->studio ? $anime->studio->name : null,  // Студия, если связь настроена
+            'rating' => $anime->ageRating ? $anime->ageRating->name : null,  // Возрастной рейтинг
+            'genres' => $anime->genres->pluck('name'),  // Список жанров
+            'characters' => $anime->characters->map(function ($character) {
+                return [
+                    'name' => $character->name,
+                    'description' => $character->description,
+                    'voice_actor' => $character->voice_actor,
+                ];
+            }),
+            'image_url' => asset('storage/' . $anime->image_url),  // URL изображения
+        ];
+        return response()->json($animeData, 200);
+    }
 }

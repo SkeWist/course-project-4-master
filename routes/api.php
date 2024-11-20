@@ -26,7 +26,7 @@ Route::get('/anime/{animeId}', [AnimeController::class, 'show'])->name('anime.sh
 Route::get('/anime/year/{year}', [AnimeController::class, 'getAnimeByYear']); // Поиск аниме по году
 Route::get('/anime/search', [AnimeController::class, 'searchAnime']); // Поиск аниме по ключевым словам
 Route::get('/anime_types', [AnimeTypeController::class, 'index']); // Типы аниме
-Route::get('/anime/random', [AnimeController::class, 'random']);
+
 
 // Дополнительные ресурсы
 Route::get('/genres', [GenreController::class, 'index']); // Получение списка жанров
@@ -48,3 +48,4 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 // Работа с персонажами
 Route::get('anime/{animeId}/characters', [CharacterController::class, 'getCharacterAudioByAnime']);
 
+Route::get('anime/far', [AnimeController::class, 'getRandomAnime']);

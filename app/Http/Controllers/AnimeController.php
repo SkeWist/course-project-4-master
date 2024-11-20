@@ -72,7 +72,7 @@ class AnimeController extends Controller
                 'studio' => $anime->studio?->name ?? 'Не указано',
                 'rating' => $anime->rating,
                 'genres' => $anime->genres->pluck('name'),
-                'image_url' => $anime->image_url,
+                'image_url' => "http://course-project-4-master/storage/" . $anime->image_url,
                 'age_rating' => $anime->ageRating?->name ?? 'Не указано',
                 'anime_type' => $anime->animeType?->name ?? 'Не указано',
                 'episode_count' => $anime->episode_count,
@@ -153,6 +153,7 @@ class AnimeController extends Controller
     }
     public function editAnime(Request $request, $animeId)
     {
+        // Валидация данных
         $request->validate([
             'title' => 'nullable|string|min:3|max:255',
             'description' => 'nullable|string',
@@ -164,11 +165,21 @@ class AnimeController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Поле изображения опционально
         ]);
 
+        // Поиск аниме
         $anime = Anime::find($animeId);
 
         if (!$anime) {
             return response()->json(['message' => 'Аниме не найдено.'], 404);
         }
+
+        // Обновляем поля модели только если они предоставлены в запросе
+        if ($request->has('title')) $anime->title = $request->title;
+        if ($request->has('description')) $anime->description = $request->description;
+        if ($request->has('studio_id')) $anime->studio_id = $request->studio_id;
+        if ($request->has('age_rating_id')) $anime->age_rating_id = $request->age_rating_id;
+        if ($request->has('anime_type_id')) $anime->anime_type_id = $request->anime_type_id;
+        if ($request->has('episode_count')) $anime->episode_count = $request->episode_count;
+        if ($request->has('rating')) $anime->rating = $request->rating;
 
         // Если предоставлено новое изображение, загружаем его
         if ($request->hasFile('image')) {
@@ -177,22 +188,18 @@ class AnimeController extends Controller
                 Storage::disk('public')->delete($anime->image_url);
             }
 
+            // Сохраняем новое изображение
             $imagePath = $request->file('image')->store('anime_images', 'public');
             $anime->image_url = $imagePath;
         }
 
-        // Обновляем остальные поля
-        $anime->update($request->only([
-            'title',
-            'description',
-            'studio_id',
-            'age_rating_id',
-            'anime_type_id',
-            'episode_count',
-            'rating',
-        ]));
+        // Сохраняем изменения в базе данных
+        $anime->save();
 
-        return response()->json(['message' => 'Аниме успешно обновлено!']);
+        return response()->json([
+            'message' => 'Аниме успешно обновлено.',
+            'anime' => $anime
+        ], 200);
     }
 
 }

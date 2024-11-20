@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AnimeSeeder::class,       // Затем сидер для аниме
             CharacterSeeder::class,
             RoleSeeder::class,
+            GallerySeeder::class,
         ]);
     }
 }

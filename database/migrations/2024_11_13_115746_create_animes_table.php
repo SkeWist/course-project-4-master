@@ -21,8 +21,8 @@ return new class extends Migration
             $table->foreign('anime_type_id')->references('id')->on('anime_types')->onDelete('set null'); // Связь с таблицей anime_types
             $table->integer('episode_count');
             $table->decimal('rating', 3, 1);
+            $table->string('image_url')->nullable(); // Добавляем поле для URL изображения
             $table->timestamps();
-
         });
     }
     /**

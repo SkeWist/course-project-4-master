@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Request\Anime\AnimeListRequest;
 use App\Models\Anime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AnimeController extends Controller
 {
@@ -56,7 +58,7 @@ class AnimeController extends Controller
 
     public function show($animeId)
     {
-        $anime = Anime::with(['characters', 'studio', 'genres', 'ageRating'])->find($animeId);
+        $anime = Anime::with(['studio', 'ageRating', 'genres', 'animeType'])->find($animeId);
 
         if (!$anime) {
             return response()->json(['message' => 'Аниме не найдено.'], 404);
@@ -72,12 +74,13 @@ class AnimeController extends Controller
                 'genres' => $anime->genres->pluck('name'),
                 'image_url' => $anime->image_url,
                 'age_rating' => $anime->ageRating?->name ?? 'Не указано',
-                'anime_type' => $anime->anime_type,
-                'release_date' => $anime->release_date,
+                'anime_type' => $anime->animeType?->name ?? 'Не указано',
                 'episode_count' => $anime->episode_count,
             ],
         ]);
     }
+
+
 
     public function deleteAnime($animeId)
     {
@@ -87,6 +90,11 @@ class AnimeController extends Controller
             return response()->json(['message' => 'Аниме не найдено.'], 404);
         }
 
+        // Удаляем изображение, если оно существует
+        if ($anime->image_url && Storage::disk('public')->exists($anime->image_url)) {
+            Storage::disk('public')->delete($anime->image_url);
+        }
+
         $anime->delete();
 
         return response()->json(['message' => 'Аниме успешно удалено.'], 200);
@@ -94,16 +102,12 @@ class AnimeController extends Controller
 
     public function random()
     {
-        // Попробуйте изменить запрос
-        $anime = Anime::inRandomOrder()->limit(1)->first();
+        // Получаем случайное аниме с помощью метода randomAnime
+        $anime = Anime::randomAnime();
 
-        if (!$anime) {
-            return response()->json(['message' => 'Аниме не найдено.'], 404);
-        }
 
         return response()->json($anime);
     }
-
     public function searchAnime(Request $request)
     {
         $keyword = $request->query('keyword');
@@ -120,30 +124,44 @@ class AnimeController extends Controller
         $request->validate([
             'title' => 'required|string|min:3|max:255',
             'description' => 'required|string',
-            'studio' => 'required|string|min:3|max:32',
-            'rating' => 'required|string|min:2|max:3',
-            'image_url' => 'required|url',
+            'studio_id' => 'required|exists:studios,id',
             'age_rating_id' => 'required|exists:age_ratings,id',
-            'anime_type' => 'required|string|in:Фильм,Сериал,Короткометражка',
+            'anime_type_id' => 'nullable|exists:anime_types,id', // Проверка существования типа
             'episode_count' => 'required|integer|min:1',
+            'rating' => 'required|numeric|min:0|max:10',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Поле изображения опционально
         ]);
 
-        $anime = Anime::create($request->all());
+        // Загрузка изображения, если оно было предоставлено
+        $imagePath = $request->hasFile('image')
+            ? $request->file('image')->store('anime_images', 'public')
+            : null;
+
+        // Создание записи
+        $anime = Anime::create([
+            'title' => $request->input('title'),
+            'description' => $request->input('description'),
+            'studio_id' => $request->input('studio_id'),
+            'age_rating_id' => $request->input('age_rating_id'),
+            'anime_type_id' => $request->input('anime_type_id'),
+            'episode_count' => $request->input('episode_count'),
+            'rating' => $request->input('rating'),
+            'image_url' => $imagePath, // Сохраняем путь изображения или null
+        ]);
 
         return response()->json(['message' => 'Аниме успешно добавлено!', 'anime_id' => $anime->id], 201);
     }
-
     public function editAnime(Request $request, $animeId)
     {
         $request->validate([
-            'title' => 'required|string|min:3|max:255',
-            'description' => 'required|string',
-            'studio' => 'required|string|min:3|max:32',
-            'rating' => 'required|string|min:2|max:3',
-            'image_url' => 'required|url',
-            'age_rating_id' => 'required|exists:age_ratings,id',
-            'anime_type' => 'required|string|in:Фильм,Сериал,Короткометражка',
+            'title' => 'nullable|string|min:3|max:255',
+            'description' => 'nullable|string',
+            'studio_id' => 'nullable|exists:studios,id',
+            'age_rating_id' => 'nullable|exists:age_ratings,id',
+            'anime_type_id' => 'nullable|exists:anime_types,id',
             'episode_count' => 'nullable|integer|min:1',
+            'rating' => 'nullable|numeric|min:0|max:10',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Поле изображения опционально
         ]);
 
         $anime = Anime::find($animeId);
@@ -152,8 +170,29 @@ class AnimeController extends Controller
             return response()->json(['message' => 'Аниме не найдено.'], 404);
         }
 
-        $anime->update($request->all());
+        // Если предоставлено новое изображение, загружаем его
+        if ($request->hasFile('image')) {
+            // Удаляем старое изображение, если оно существует
+            if ($anime->image_url && Storage::disk('public')->exists($anime->image_url)) {
+                Storage::disk('public')->delete($anime->image_url);
+            }
+
+            $imagePath = $request->file('image')->store('anime_images', 'public');
+            $anime->image_url = $imagePath;
+        }
+
+        // Обновляем остальные поля
+        $anime->update($request->only([
+            'title',
+            'description',
+            'studio_id',
+            'age_rating_id',
+            'anime_type_id',
+            'episode_count',
+            'rating',
+        ]));
 
         return response()->json(['message' => 'Аниме успешно обновлено!']);
     }
+
 }

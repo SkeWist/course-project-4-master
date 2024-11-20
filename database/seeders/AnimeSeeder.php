@@ -19,6 +19,7 @@ class AnimeSeeder extends Seeder
                 'description' => 'A heartwarming tale of childhood and friendship with a magical forest spirit.',
                 'episode_count' => 1,
                 'rating' => 8.5,
+                'image_url' => 'https://example.com/images/totoro.jpg', // Добавлено поле image_url
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -30,6 +31,7 @@ class AnimeSeeder extends Seeder
                 'description' => 'A young pirate embarks on an epic adventure to find the legendary One Piece treasure.',
                 'episode_count' => 1000,
                 'rating' => 9.0,
+                'image_url' => 'https://example.com/images/onepiece.jpg', // Добавлено поле image_url
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

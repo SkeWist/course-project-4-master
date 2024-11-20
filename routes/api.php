@@ -23,7 +23,6 @@ Route::middleware('auth:sanctum')->post('/user/profile', [UserController::class,
 // Аниме
 Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index'); // Получение списка аниме
 Route::get('/anime/{animeId}', [AnimeController::class, 'show'])->name('anime.show'); // Просмотр конкретного аниме
-Route::get('/anime/random', [AnimeController::class, 'random']); // Случайное аниме
 Route::get('/anime/year/{year}', [AnimeController::class, 'getAnimeByYear']); // Поиск аниме по году
 Route::get('/anime/search', [AnimeController::class, 'searchAnime']); // Поиск аниме по ключевым словам
 Route::get('/anime_types', [AnimeTypeController::class, 'index']); // Типы аниме

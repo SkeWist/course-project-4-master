@@ -12,7 +12,7 @@ class StudioSeeder extends Seeder
         $studios = ['Studio Ghibli', 'Toei Animation', 'Madhouse', 'Sunrise', 'Bones', 'MAPPA'];
 
         foreach ($studios as $studio) {
-            DB::table('studios')->insert([
+            DB::table('studio')->insert([
                 'name' => $studio,
                 'created_at' => now(),
                 'updated_at' => now(),

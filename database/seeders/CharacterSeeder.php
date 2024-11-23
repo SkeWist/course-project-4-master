@@ -9,7 +9,7 @@ class CharacterSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('characters')->insert([
+        DB::table('character')->insert([
             [
                 'name' => 'Узумаки Наруто',
                 'voice_actor' => 'Масаси Кисимото',

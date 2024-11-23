@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('genres', function (Blueprint $table) {
+        Schema::create('age_rating', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Название жанра
+            $table->string('name')->unique(); // Название возрастного рейтинга
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('genres');
+        Schema::dropIfExists('age_rating');
     }
 };

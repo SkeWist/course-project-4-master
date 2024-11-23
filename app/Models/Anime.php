@@ -11,22 +11,16 @@ class Anime extends Model
 
     // Указываем заполняемые поля
     protected $fillable = [
-        'title',
-        'description',
-        'studio_id',        // ID студии
-        'age_rating_id',    // ID возрастного рейтинга
-        'anime_type_id',    // ID типа аниме
-        'episode_count',
-        'rating',
-        'image_url',        // URL изображения
+        'title', 'description', 'studio_id', 'age_rating_id', 'anime_type_id',
+        'episode_count', 'rating', 'image_url', 'release_year'
     ];
 
-    protected $table = 'animes'; // Явно указываем таблицу
+    protected $table = 'anime'; // Явно указываем таблицу
 
     /**
      * Связь с таблицей жанров (Many-to-Many).
      */
-    public function genres()
+    public function genre()
     {
         return $this->belongsToMany(Genre::class, 'anime_genre', 'anime_id', 'genre_id');
     }
@@ -36,7 +30,7 @@ class Anime extends Model
      */
     public function studio()
     {
-        return $this->belongsTo(Studio::class, 'studio_id');
+        return $this->belongsTo(Studio::class);  // Убедитесь, что Studio имеет правильное имя таблицы
     }
 
     /**
@@ -44,7 +38,7 @@ class Anime extends Model
      */
     public function ageRating()
     {
-        return $this->belongsTo(AgeRating::class, 'age_rating_id');
+        return $this->belongsTo(AgeRating::class);  // Убедитесь, что связь настроена правильно
     }
 
     /**
@@ -58,7 +52,7 @@ class Anime extends Model
     /**
      * Связь с таблицей персонажей (One-to-Many).
      */
-    public function characters()
+    public function character()
     {
         return $this->hasMany(Character::class, 'anime_id');
     }

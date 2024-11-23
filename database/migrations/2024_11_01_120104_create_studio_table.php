@@ -9,12 +9,11 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('galleries', function (Blueprint $table) {
+        Schema::create('studio', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('anime_id')->constrained()->onDelete('cascade'); // Связь с аниме
-            $table->string('image_url'); // URL изображения
+            $table->string('name')->unique(); // Название студии
             $table->timestamps();
         });
     }
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('galleries');
+        Schema::dropIfExists('studio');
     }
 };

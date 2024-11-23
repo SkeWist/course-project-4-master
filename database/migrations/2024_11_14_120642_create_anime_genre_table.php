@@ -10,28 +10,13 @@ return new class extends Migration
     {
         Schema::create('anime_genre', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('anime_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('genre_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('anime_id')->constrained('anime')->cascadeOnDelete(); // Явно указываем имя таблицы anime
+            $table->foreignId('genre_id')->constrained('genre')->cascadeOnDelete(); // Явно указываем имя таблицы genres
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('anime_genre');
     }
 };
-class CreateAnimeGenreTable extends Migration
-{
-    public function up()
-    {
-        Schema::create('anime_genre', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('anime_id')->constrained()->onDelete('cascade');
-            $table->foreignId('genre_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-        });
-    }
-    public function down()
-    {
-        Schema::dropIfExists('anime_genre');
-    }
-}

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Http\Request\Auth\LoginRequest;
 use App\Http\Request\Auth\RegisterRequest;
 use App\Models\User;
@@ -20,7 +21,7 @@ class AuthController extends Controller
             'surname'  => $validated['surname'],
             'login'    => $validated['login'],
             'password' => Hash::make($validated['password']),
-            'role_id' => 2,
+            'role_id'  => 2,  // Здесь также проверим, что связь с ролью настроена правильно
         ]);
 
         return response()->json([
@@ -41,8 +42,8 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Успешная авторизация',
-                'token' => $token,
-                'user' => $user
+                'token'   => $token,
+                'user'    => $user
             ], 200);
         }
 

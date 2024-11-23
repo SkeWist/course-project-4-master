@@ -12,7 +12,7 @@ class GenreSeeder extends Seeder
         $genres = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi'];
 
         foreach ($genres as $genre) {
-            DB::table('genres')->insert([
+            DB::table('genre')->insert([
                 'name' => $genre,
                 'created_at' => now(),
                 'updated_at' => now(),

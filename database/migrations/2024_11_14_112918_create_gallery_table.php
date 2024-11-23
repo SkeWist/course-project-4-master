@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('roles', function (Blueprint $table) {
+        Schema::create('gallery', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Название роли
+            $table->foreignId('anime_id')->constrained('anime')->onDelete('cascade'); // Явно указываем имя таблицы
+            $table->string('image_url'); // URL изображения
             $table->timestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('gallery');
     }
 };

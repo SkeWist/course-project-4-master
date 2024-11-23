@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RandomAnime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -21,12 +22,12 @@ Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'getUser
 Route::middleware('auth:sanctum')->post('/user/profile', [UserController::class, 'updateProfile']);
 
 // Аниме
-Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index'); // Получение списка аниме
-Route::get('/anime/{animeId}', [AnimeController::class, 'show'])->name('anime.show'); // Просмотр конкретного аниме
+Route::get('/anime', [AnimeController::class, 'index']); // Получение списка аниме
+Route::get('/anime/{animeId}', [AnimeController::class, 'show']); // Просмотр конкретного аниме
 Route::get('/anime/year/{year}', [AnimeController::class, 'getAnimeByYear']); // Поиск аниме по году
-Route::get('/anime/search', [AnimeController::class, 'searchAnime']); // Поиск аниме по ключевым словам
 Route::get('/anime_types', [AnimeTypeController::class, 'index']); // Типы аниме
-
+Route::get('/anime/year/{year}', [AnimeController::class, 'getAnimeByYear']);
+Route::get('/anime/search', [AnimeController::class, 'searchAnime']);
 
 // Дополнительные ресурсы
 Route::get('/genres', [GenreController::class, 'index']); // Получение списка жанров
@@ -36,11 +37,10 @@ Route::get('/age_ratings', [AgeRatingController::class, 'index']); // Возра
 // Администрирование (требуется аутентификация)
 Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     // Управление аниме
-    Route::get('/anime', [AnimeController::class, 'index'])->name('admin.anime.index'); // Список аниме
-    Route::post('/anime', [AnimeController::class, 'addAnime'])->name('admin.anime.add'); // Добавление нового аниме
-    Route::get('/anime/{animeId}', [AnimeController::class, 'show'])->name('admin.anime.show'); // Просмотр аниме
-    Route::post('/anime/{animeId}', [AnimeController::class, 'editAnime'])->name('admin.anime.update'); // Обновление аниме
-    Route::delete('/anime/{animeId}', [AnimeController::class, 'deleteAnime'])->name('admin.anime.destroy'); // Удаление аниме
+    Route::get('/anime', [AnimeController::class, 'index']); // Список аниме
+    Route::post('/anime', [AnimeController::class, 'addAnime']); // Добавление нового аниме
+    Route::post('/anime/{animeId}', [AnimeController::class, 'editAnime']); // Обновление аниме
+    Route::delete('/anime/{animeId}', [AnimeController::class, 'deleteAnime']); // Удаление аниме
 
     // Управление студиями
     Route::post('/studios', [StudioController::class, 'addStudio'])->name('admin.studio.add'); // Добавление студии
@@ -48,4 +48,4 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 // Работа с персонажами
 Route::get('anime/{animeId}/characters', [CharacterController::class, 'getCharacterAudioByAnime']);
 
-Route::get('anime/far', [AnimeController::class, 'getRandomAnime']);
+Route::get('anime/far', [RandomAnime::class, 'getRandomAnime']);

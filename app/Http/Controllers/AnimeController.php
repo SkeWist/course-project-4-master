@@ -22,11 +22,11 @@ class AnimeController extends Controller
     }
     public function index(AnimeListRequest $request)
     {
-        $query = Anime::with(['genres', 'studio', 'ageRating']); // Загрузка связанных данных
+        $query = Anime::with(['genre', 'studio', 'ageRating']); // Загрузка связанных данных
 
         // Фильтры
         if ($request->filled('genre')) {
-            $query->whereHas('genres', function ($q) use ($request) {
+            $query->whereHas('genre', function ($q) use ($request) {
                 $q->where('name', $request->input('genre'));
             });
         }
@@ -80,6 +80,32 @@ class AnimeController extends Controller
         ]);
     }
 
+    public function getAnimeByYear($year)
+    {
+        // Проверяем, есть ли аниме, выпущенные в указанном году
+        $animeList = Anime::where('release_year', $year)->get();
+
+        if ($animeList->isEmpty()) {
+            return response()->json(['message' => "Аниме, выпущенные в $year году, не найдены."], 404);
+        }
+
+        // Формируем список аниме
+        $animeData = $animeList->map(function ($anime) {
+            $genres = $anime->genres ? $anime->genres->pluck('name') : [];
+            return [
+                'id' => $anime->id,
+                'title' => $anime->title,
+                'description' => $anime->description,
+                'studio' => $anime->studio ? $anime->studio->name : null,
+                'rating' => $anime->ageRating ? $anime->ageRating->name : null,
+                'genres' => $genres, // теперь genres может быть пустым массивом
+                'image_url' => asset('storage/' . $anime->image_url),
+            ];
+        });
+
+        return response()->json($animeData, 200);
+    }
+
 
 
     public function deleteAnime($animeId)
@@ -103,13 +129,39 @@ class AnimeController extends Controller
 
     public function searchAnime(Request $request)
     {
+        // Получаем ключевое слово из параметров запроса
         $keyword = $request->query('keyword');
 
-        $anime = Anime::where('title', 'LIKE', "%$keyword%")
-            ->orWhere('description', 'LIKE', "%$keyword%")
+        // Ищем аниме с использованием частичного совпадения (независимо от регистра)
+        $animeList = Anime::where('title', 'LIKE', "%{$keyword}%")
+            ->orWhere('description', 'LIKE', "%{$keyword}%")
             ->get();
+        // Проверяем, передано ли ключевое слово
+        if (!$keyword) {
+            return response()->json(['message' => 'Ключевое слово не указано.'], 400);
+        }
 
-        return response()->json($anime);
+        // Проверяем, найдены ли аниме
+        if ($animeList->isEmpty()) {
+            return response()->json(['message' => "Аниме с ключевым словом \"{$keyword}\" не найдено."], 404);
+        }
+
+        // Формируем список найденных аниме
+        $animeData = $animeList->map(function ($anime) {
+            return [
+                'id' => $anime->id,
+                'title' => $anime->title,
+                'description' => $anime->description,
+                'studio' => $anime->studio ? $anime->studio->name : null, // Получаем название студии
+                'rating' => $anime->ageRating ? $anime->ageRating->name : null, // Получаем название возрастного рейтинга
+                'genres' => $anime->genres->pluck('name'), // Получаем список жанров
+                'image_url' => asset('storage/' . $anime->image_url), // Путь к изображению
+            ];
+        });
+
+
+
+        return response()->json($animeData, 200);
     }
 
     public function addAnime(Request $request)
@@ -117,12 +169,13 @@ class AnimeController extends Controller
         $request->validate([
             'title' => 'required|string|min:3|max:255',
             'description' => 'required|string',
-            'studio_id' => 'required|exists:studios,id',
-            'age_rating_id' => 'required|exists:age_ratings,id',
-            'anime_type_id' => 'nullable|exists:anime_types,id', // Проверка существования типа
+            'studio_id' => 'required|exists:studio,id',
+            'age_rating_id' => 'required|exists:age_rating,id',
+            'anime_type_id' => 'nullable|exists:anime_type,id', // Проверка существования типа
             'episode_count' => 'required|integer|min:1',
             'rating' => 'required|numeric|min:0|max:10',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Поле изображения опционально
+            'release_year' => 'required|string',
         ]);
 
         // Загрузка изображения, если оно было предоставлено
@@ -140,6 +193,7 @@ class AnimeController extends Controller
             'episode_count' => $request->input('episode_count'),
             'rating' => $request->input('rating'),
             'image_url' => $imagePath, // Сохраняем путь изображения или null
+            'release_year' => $request->input('release_year'),
         ]);
 
         return response()->json(['message' => 'Аниме успешно добавлено!', 'anime_id' => $anime->id], 201);
@@ -150,9 +204,9 @@ class AnimeController extends Controller
         $request->validate([
             'title' => 'nullable|string|min:3|max:255',
             'description' => 'nullable|string',
-            'studio_id' => 'nullable|exists:studios,id',
-            'age_rating_id' => 'nullable|exists:age_ratings,id',
-            'anime_type_id' => 'nullable|exists:anime_types,id',
+            'studio_id' => 'nullable|exists:studio,id',
+            'age_rating_id' => 'nullable|exists:age_rating,id',
+            'anime_type_id' => 'nullable|exists:anime_type,id',
             'episode_count' => 'nullable|integer|min:1',
             'rating' => 'nullable|numeric|min:0|max:10',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Поле изображения опционально

@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class Gallery extends Model
 {
     use HasFactory;
+    protected $table = 'gallery';
 
-    protected $fillable = ['anime_id', 'image_url'];
+    protected $fillable = [
+        'anime_id',   // ID аниме, к которому привязано изображение
+        'image_path', // Путь к изображению
+    ];
 
-    /**
-     * Картинка принадлежит одному аниме.
-     */
+    // Связь: изображение принадлежит одному аниме
     public function anime()
     {
         return $this->belongsTo(Anime::class);

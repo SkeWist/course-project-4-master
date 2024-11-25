@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('gallery', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('anime_id')->constrained('anime')->onDelete('cascade'); // Явно указываем имя таблицы
-            $table->string('image_url'); // URL изображения
+            $table->unsignedBigInteger('anime_id'); // Ссылка на аниме
+            $table->string('image_path'); // Путь к изображению
             $table->timestamps();
+            // Добавляем внешний ключ, связывающий с таблицей аниме
+            $table->foreign('anime_id')->references('id')->on('anime')->onDelete('cascade');
         });
+
     }
 
     /**

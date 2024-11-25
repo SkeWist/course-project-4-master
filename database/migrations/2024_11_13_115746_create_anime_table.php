@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->foreignId('studio_id')->constrained();
-            $table->foreignId('age_rating_id')->constrained();
-            $table->foreignId('anime_type_id')->nullable()->constrained();
+            $table->foreignId('studio_id')->constrained("studio");
+            $table->foreignId('age_rating_id')->constrained("age_rating");
+            $table->foreignId('anime_type_id')->nullable()->constrained("anime_type");
             $table->integer('episode_count');
             $table->decimal('rating', 5, 2);
             $table->string('image_url')->nullable();

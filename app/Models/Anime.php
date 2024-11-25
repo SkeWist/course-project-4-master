@@ -57,8 +57,8 @@ class Anime extends Model
         return $this->hasMany(Character::class, 'anime_id');
     }
 
-    /**
-     * Получение случайного аниме.
-     */
-
+    public function gallery()
+    {
+        return $this->hasMany(Gallery::class);
+    }
 }

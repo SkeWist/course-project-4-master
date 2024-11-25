@@ -132,14 +132,15 @@ class AnimeController extends Controller
         // Получаем ключевое слово из параметров запроса
         $keyword = $request->query('keyword');
 
-        // Ищем аниме с использованием частичного совпадения (независимо от регистра)
-        $animeList = Anime::where('title', 'LIKE', "%{$keyword}%")
-            ->orWhere('description', 'LIKE', "%{$keyword}%")
-            ->get();
         // Проверяем, передано ли ключевое слово
         if (!$keyword) {
             return response()->json(['message' => 'Ключевое слово не указано.'], 400);
         }
+
+        // Ищем аниме с использованием частичного совпадения (независимо от регистра)
+        $animeList = Anime::where('title', 'LIKE', "%{$keyword}%")
+            ->orWhere('description', 'LIKE', "%{$keyword}%")
+            ->get();
 
         // Проверяем, найдены ли аниме
         if ($animeList->isEmpty()) {
@@ -152,18 +153,15 @@ class AnimeController extends Controller
                 'id' => $anime->id,
                 'title' => $anime->title,
                 'description' => $anime->description,
-                'studio' => $anime->studio ? $anime->studio->name : null, // Получаем название студии
-                'rating' => $anime->ageRating ? $anime->ageRating->name : null, // Получаем название возрастного рейтинга
-                'genres' => $anime->genres->pluck('name'), // Получаем список жанров
-                'image_url' => asset('storage/' . $anime->image_url), // Путь к изображению
+                'studio' => $anime->studio ? $anime->studio->name : null,
+                'rating' => $anime->ageRating ? $anime->ageRating->name : null,
+                'genres' => $anime->genres ? $anime->genres->pluck('name') : [],
+                'image_url' => $anime->image_url ? asset('storage/' . $anime->image_url) : null,
             ];
         });
 
-
-
         return response()->json($animeData, 200);
     }
-
     public function addAnime(Request $request)
     {
         $request->validate([
@@ -248,33 +246,28 @@ class AnimeController extends Controller
             'anime' => $anime
         ], 200);
     }
-
-    public function getRandomAnime()
+    public function getAnimeGallery($animeId)
     {
-        if (Anime::count() == 0) {
-            return response()->json(['message' => 'Не найдено аниме в базе данных.'], 404);
+        // Найти аниме по ID
+        $anime = Anime::with('gallery')->find($animeId);
+
+        // Проверить, существует ли аниме
+        if (!$anime) {
+            return response()->json(['message' => 'Аниме не найдено.'], 404);
         }
 
-        // Получаем случайное аниме из базы данных
-        $anime = Anime::inRandomOrder()->first();
+        // Получить список изображений из галереи
+        $gallery = $anime->gallery->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'image_url' => asset('storage/' . $item->image_url),
+                'description' => $item->description,
+            ];
+        });
 
-        // Формируем ответ с данными о случайном аниме
-        $animeData = [
-            'id' => $anime->id,
-            'title' => $anime->title,
-            'description' => $anime->description,
-            'studio' => $anime->studio ? $anime->studio->name : null,  // Студия, если связь настроена
-            'rating' => $anime->ageRating ? $anime->ageRating->name : null,  // Возрастной рейтинг
-            'genres' => $anime->genres->pluck('name'),  // Список жанров
-            'characters' => $anime->characters->map(function ($character) {
-                return [
-                    'name' => $character->name,
-                    'description' => $character->description,
-                    'voice_actor' => $character->voice_actor,
-                ];
-            }),
-            'image_url' => asset('storage/' . $anime->image_url),  // URL изображения
-        ];
-        return response()->json($animeData, 200);
+        return response()->json([
+            'anime' => $anime->title,
+            'gallery' => $gallery,
+        ], 200);
     }
 }

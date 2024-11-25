@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Anime;
+use Illuminate\Support\Facades\Validator;
 
 class GalleryController extends Controller
 {
     // Получение всех изображений галереи
     public function index()
     {
-        $galleries = Gallery::all();
-        return response()->json($galleries, 200);
+        $gallery = Gallery::all();
+        return response()->json($gallery, 200);
     }
 
     // Получение изображения галереи по ID
@@ -27,7 +29,7 @@ class GalleryController extends Controller
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Валидация для файла изображения
-            'anime_id' => 'required|exists:animes,id', // Валидация для anime_id
+            'anime_id' => 'required|exists:anime,id', // Валидация для anime_id
         ]);
 
         // Сохранение изображения в папку AnimeTitle
@@ -40,35 +42,6 @@ class GalleryController extends Controller
         ]);
 
         return response()->json($gallery, 201);
-    }
-
-    // Обновление изображения галереи
-    public function update(Request $request, $id)
-    {
-        $gallery = Gallery::findOrFail($id);
-
-        $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Валидация для файла изображения
-            'anime_id' => 'required|exists:animes,id', // Валидация для anime_id
-        ]);
-
-        if ($request->hasFile('image')) {
-            // Удаление старого файла
-            if ($gallery->image_url) {
-                $oldPath = str_replace('/storage/', '', $gallery->image_url);
-                Storage::disk('public')->delete($oldPath);
-            }
-
-            // Сохранение нового изображения
-            $path = $request->file('image')->store('AnimeTitle', 'public');
-            $gallery->image_url = Storage::url($path);
-        }
-
-        // Обновление записи в базе данных
-        $gallery->anime_id = $request->anime_id;
-        $gallery->save();
-
-        return response()->json($gallery, 200);
     }
 
     // Удаление изображения галереи
@@ -85,4 +58,49 @@ class GalleryController extends Controller
         $gallery->delete();
         return response()->json(['message' => 'Изображение галереи удалено.'], 200);
     }
+    public function addGalleryImages(Request $request, $anime_id)
+    {
+        \Log::info('Request received', $request->all());
+
+        $validator = Validator::make($request->all(), [
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            \Log::error('Validation failed', $validator->errors()->all());
+            return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+        }
+
+        // Проверяем, существует ли аниме с таким ID
+        $anime = Anime::findOrFail($anime_id);
+
+        // Сохраняем изображения
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('public/gallery_images');
+
+            // Добавляем запись в базу данных
+            Gallery::create([
+                'anime_id' => $anime->id,
+                'image_path' => $path,
+            ]);
+        }
+
+        return response()->json(['message' => 'Изображения успешно загружены!']);
+    }
+
+    // Метод для получения изображений для конкретного аниме
+    public function getGalleryImages($anime_id)
+    {
+        // Получаем все изображения для аниме с заданным ID
+        $images = Gallery::where('anime_id', $anime_id)->get();
+
+        // Если изображения есть, возвращаем их, иначе сообщение о том, что изображений нет
+        if ($images->isEmpty()) {
+            return response()->json(['message' => 'Изображения не найдены для этого аниме.'], 404);
+        }
+
+        return response()->json($images);
+    }
+
 }

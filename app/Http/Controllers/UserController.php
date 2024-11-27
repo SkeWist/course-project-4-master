@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    public function index()
+    {
+        // Получаем всех пользователей
+        $users = User::all();
+
+        // Возвращаем JSON-ответ
+        return response()->json([
+            'message' => 'Список всех пользователей',
+            'users' => $users,
+        ]);
+    }
     public function updateProfile(Request $request)
     {
         // Валидация данных
@@ -33,13 +44,5 @@ class UserController extends Controller
 
         // Возвращаем успешный ответ
         return response()->json(['message' => 'Пароль успешно обновлён.'], 200);
-    }
-
-    // Метод для получения всех пользователей
-    public function getAllUsers()
-    {
-        $users = User::all(); // Получаем всех пользователей
-
-        return response()->json($users, 200);
     }
 }

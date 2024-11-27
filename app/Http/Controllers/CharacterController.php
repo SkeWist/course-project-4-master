@@ -39,7 +39,7 @@ class CharacterController extends Controller
             'name'        => 'required|string|max:255',
             'voice_actor' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'anime_id'    => 'required|exists:animes,id',
+            'anime_id'    => 'required|exists:anime,id',
             'audio_path'  => 'nullable|string', // Добавлено для аудиодорожек
         ]);
 
@@ -50,6 +50,43 @@ class CharacterController extends Controller
             'data'    => $character,
         ], 201);
     }
+    public function createCharacter(Request $request)
+    {
+        // Валидация данных
+        $validatedData = $request->validate([
+            'name'        => 'required|string|max:255',
+            'voice_actor' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'anime_id'    => 'required|exists:anime,id', // Проверка существования аниме
+            'audio'       => 'nullable|mimes:mp3,wav|max:5120', // Только mp3/wav файлы до 5 МБ
+        ]);
+
+        // Проверка и загрузка аудиодорожки, если она предоставлена
+        $audioPath = $request->hasFile('audio')
+            ? $request->file('audio')->store('character_audio', 'public')
+            : null;
+
+        // Создание записи персонажа
+        $character = Character::create([
+            'name'        => $validatedData['name'],
+            'voice_actor' => $validatedData['voice_actor'],
+            'description' => $validatedData['description'],
+            'anime_id'    => $validatedData['anime_id'],
+            'audio_path'  => $audioPath, // Сохраняем путь аудиодорожки или null
+        ]);
+
+        return response()->json([
+            'message' => 'Персонаж успешно создан!',
+            'character' => [
+                'id' => $character->id,
+                'name' => $character->name,
+                'voice_actor' => $character->voice_actor,
+                'audio_url' => $character->audio_path
+                    ? asset('storage/' . $character->audio_path)
+                    : null, // URL аудиодорожки, если она есть
+            ],
+        ], 201);
+    }
 
     public function update(Request $request, int $id): JsonResponse
     {
@@ -57,7 +94,7 @@ class CharacterController extends Controller
             'name'        => 'required|string|max:255',
             'voice_actor' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'anime_id'    => 'required|exists:animes,id',
+            'anime_id'    => 'required|exists:anime,id',
             'audio_path'  => 'nullable|string', // Добавлено для аудиодорожек
         ]);
 
@@ -113,6 +150,23 @@ class CharacterController extends Controller
         return response()->json([
             'anime_title'    => $anime->title,
             'characters'     => $charactersWithAudio,
+        ], 200);
+    }
+    public function getCharacterAudio($characterId)
+    {
+        // Поиск персонажа
+        $character = Character::find($characterId);
+        if (!$character) {
+            return response()->json(['message' => 'Персонаж не найден.'], 404);
+        }
+
+        // Проверка наличия аудиодорожки
+        if (!$character->audio_path) {
+            return response()->json(['message' => 'Аудиодорожка для персонажа отсутствует.'], 404);
+        }
+
+        return response()->json([
+            'audio_url' => asset('storage/' . $character->audio_path),
         ], 200);
     }
 }

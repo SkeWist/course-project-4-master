@@ -15,7 +15,7 @@ class AnimeType extends Model
     // Указываем, какие поля можно массово заполнять
     protected $fillable = ['name'];
 
-    public function animes()
+    public function anime()
     {
         return $this->hasMany(Anime::class);
     }

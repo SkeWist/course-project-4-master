@@ -44,6 +44,8 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::delete('/anime/{animeId}', [AnimeController::class, 'deleteAnime']); // Удаление аниме
     Route::post('/gallery/{anime_id}/add', [GalleryController::class, 'addGalleryImages']); // Для загрузки изображений
     Route::get('/gallery/{anime_id}', [GalleryController::class, 'getGalleryImages']); // Для получения изображений
+    Route::post('/characters', [CharacterController::class, 'createCharacter']);
+    Route::get('/users', [UserController::class, 'index']);
 
     // Управление студиями
     Route::post('/studios', [StudioController::class, 'addStudio'])->name('admin.studio.add'); // Добавление студии

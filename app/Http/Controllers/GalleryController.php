@@ -60,7 +60,6 @@ class GalleryController extends Controller
     }
     public function addGalleryImages(Request $request, $anime_id)
     {
-        \Log::info('Request received', $request->all());
 
         $validator = Validator::make($request->all(), [
             'images' => 'required|array',
@@ -68,7 +67,6 @@ class GalleryController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed', $validator->errors()->all());
             return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
